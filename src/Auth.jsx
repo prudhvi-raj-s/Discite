@@ -40,10 +40,32 @@ export function Auth({ T, B }) {
     }
   }
 
+  async function handleDummyLogin() {
+    setError("");
+    setLoading(true);
+    const dummyEmail = "test@discite.io";
+    const dummyPassword = "password";
+    try {
+      await signInWithEmailAndPassword(auth, dummyEmail, dummyPassword);
+    } catch (err) {
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+        try {
+          await createUserWithEmailAndPassword(auth, dummyEmail, dummyPassword);
+        } catch (createErr) {
+          setError(`Dummy user creation failed: ${createErr.message}`);
+        }
+      } else {
+        setError(err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: T.bg, color: T.tx, fontFamily: "'Roboto',sans-serif" }}>
       <div style={{ background: T.sf, padding: 40, borderRadius: 16, border: `1px solid ${T.bd}`, width: "100%", maxWidth: 400, boxShadow: T.sh }}>
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 24 }}><Logo size={48} /></div>
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", marginBottom: 24, position: "relative" }}><Logo size={48} /></div>
         <h2 style={{ textAlign: "center", marginBottom: 24, fontFamily: "'Marvel',sans-serif", fontSize: 28, color: T.tx }}>{isLogin ? "Welcome Back" : "Create Account"}</h2>
         
         {error && <div style={{ background: `${B.rasp}20`, color: B.rasp, padding: 12, borderRadius: 8, marginBottom: 16, fontSize: 13, border: `1px solid ${B.rasp}50` }}>{error}</div>}
@@ -62,6 +84,10 @@ export function Auth({ T, B }) {
         <button type="button" onClick={handleGoogleSignIn} disabled={loading} style={{ background: "transparent", color: T.tx, padding: "12px", borderRadius: 8, border: `1px solid ${T.bd}`, fontWeight: "bold", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, transition: "all 0.2s", width: "100%", opacity: loading ? 0.7 : 1 }}>
           <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo" style={{ width: 18, height: 18 }} />
           Continue with Google
+        </button>
+        <button type="button" onClick={handleDummyLogin} disabled={loading} style={{ background: "transparent", color: T.txM, padding: "12px", borderRadius: 8, border: `1px solid ${T.bd}`, fontWeight: "bold", fontSize: 14, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, transition: "all 0.2s", width: "100%", opacity: loading ? 0.7 : 1, marginTop: 8 }}>
+          🤫
+          Continue with Dummy Account
         </button>
 
         <div style={{ textAlign: "center", marginTop: 24, fontSize: 13, color: T.txM }}>
