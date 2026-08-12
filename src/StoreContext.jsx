@@ -26,7 +26,13 @@ export function StoreProvider({ children, user }) {
         const { notes: dbNotes, programs: dbPrograms, ...profile } = data;
         setProfileData(profile);
         if (dbNotes) setNotes(dbNotes);
-        if (dbPrograms) setProgramsList(dbPrograms);
+        if (dbPrograms) {
+          // Filter out local programs with now-invalid blob URLs from previous sessions
+          const validPrograms = dbPrograms.filter(p => {
+            return !(p.isCustom && p.tags?.includes("Local"));
+          });
+          setProgramsList(validPrograms);
+        }
       } else {
         // 2. If no profile exists (new user), create one with all initial mock data
         const initialProfile = {

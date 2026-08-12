@@ -7,7 +7,7 @@ import { useStore } from "./StoreContext";
 
 export function Learn({
   T, B,
-  plUrl, setPlUrl, loadPlaylist, plLoading, plStatus,
+  plUrl, setPlUrl, loadPlaylist, plLoading, plStatus, loadLocalFiles,
   prog, lessons, curIdx, cur, prevProg, progId, setPreviewId,
   selLesson, enterProg, deleteProgram, setEditingProg, setShowCreateProgram,
   ytPlayerRef, captureVideoNote, captureNewsNote, annotateVideo, annotating,
@@ -19,6 +19,14 @@ export function Learn({
 }) {
   const { programsList, profileData } = useStore();
   const [socTab, setSocTab] = useState("twitter");
+  const localFileInputRef = React.useRef(null);
+  const localFolderInputRef = React.useRef(null);
+  const handleLocalFileClick = () => {
+    localFileInputRef.current.click();
+  };
+  const handleLocalFolderClick = () => {
+    localFolderInputRef.current.click();
+  };
   return (
     <div style={{ flex:1,display:"flex",overflow:"hidden" }}>
       <aside style={{ width:300,background:T.sf,borderRight:`1px solid ${T.bd}`,display:"flex",flexDirection:"column",flexShrink:0,overflow:"hidden" }}>
@@ -28,9 +36,17 @@ export function Learn({
             <input className="dc-inp" value={plUrl} onChange={e=>setPlUrl(e.target.value)} onKeyDown={e=>e.key==="Enter"&&loadPlaylist()} placeholder="YouTube or PDF URL…"
               style={{ flex:1,padding:"5px 7px",fontSize:10,background:T.inp,border:`1px solid ${T.bd}`,color:T.tx,minWidth:0 }} disabled={plLoading} />
             <button className="dc-pri" onClick={loadPlaylist} disabled={plLoading} style={{ background:B.green,color:"#fff",padding:"5px 8px",borderRadius:6,fontSize:11,fontWeight:700,flexShrink:0,opacity:plLoading?0.6:1 }}>
-              {plLoading ? <Spin size={11} color="#fff"/> : "▶"}
+              {plLoading ? <Spin size={11} color="#fff"/> : "🔗"}
+            </button>
+            <button className="dc-pri" onClick={handleLocalFileClick} disabled={plLoading} title="Import Local Video Files" style={{ background:B.indigo,color:"#fff",padding:"5px 8px",borderRadius:6,fontSize:11,fontWeight:700,flexShrink:0,opacity:plLoading?0.6:1 }}>
+              {plLoading ? <Spin size={11} color="#fff"/> : "📄"}
+            </button>
+            <button className="dc-pri" onClick={handleLocalFolderClick} disabled={plLoading} title="Import Local Video Folder" style={{ background:B.indigo,color:"#fff",padding:"5px 8px",borderRadius:6,fontSize:11,fontWeight:700,flexShrink:0,opacity:plLoading?0.6:1 }}>
+              {plLoading ? <Spin size={11} color="#fff"/> : "📁"}
             </button>
           </div>
+          <input type="file" ref={localFileInputRef} onChange={loadLocalFiles} multiple accept="video/*" style={{ visibility: 'hidden', position: 'absolute', left: '-9999px' }} />
+          <input type="file" ref={localFolderInputRef} onChange={loadLocalFiles} multiple webkitdirectory directory style={{ visibility: 'hidden', position: 'absolute', left: '-9999px' }} />
           {plStatus&&<div style={{ fontSize:10.5,marginTop:4,color:plStatus.startsWith("✓")?B.green:"#E05555" }}>{plStatus}</div>}
         </div>
         <div style={{ flexShrink:0,borderBottom:`1px solid ${T.bd}` }}>

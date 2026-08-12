@@ -100,7 +100,7 @@ function Discite({ user }) {
   const [showAiChat, setShowAiChat] = useState(false);
 
   // Global Data Store
-  const { programsList, setProgramsList, groupsList, setGroupsList, notes, setNotes, events, mktItems, setMktItems, profileData } = useStore();
+  const { programsList, setProgramsList, groupsList, notes, setNotes, mktItems, profileData } = useStore();
 
   // Dynamic Programs List
   const [progId,setProgId]=useState(1);
@@ -448,7 +448,7 @@ function Discite({ user }) {
         
         const newProg = { id: newId, title: isPdf ? "Imported Book/PDF" : (listMatch ? "Imported Playlist" : "Imported Video"), instructor: isPdf ? "Document Source" : "YouTube Creator", color: B.indigo, tags: isPdf ? ["Document"] : ["YouTube"], status: "active", level: "All Levels", duration: "Custom", desc: "Custom imported content: " + plUrl, lessons: mockLessons, done: 0, total: mockLessons.length, isCustom: true };
         
-        setProgramsList(prev => [newProg, ...prev]);
+        setProgramsList(prev => [newProg, ...prev.filter(p => p.id !== newId)]);
         setProgId(newId); setCurIdx(0); ytPlayerRef.current = null;
         setPlStatus("✓ Loaded to My Programs");
       } catch(err) {
@@ -461,6 +461,36 @@ function Discite({ user }) {
     } else {
       setPlStatus("✗ Invalid URL");
       setTimeout(() => setPlStatus(""), 3000);
+    }
+  }
+
+  async function loadLocalFiles(e) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setPlLoading(true);
+    setPlStatus("Loading local files...");
+
+    try {
+      const newId = Date.now();
+      const videoFiles = Array.from(files).filter(file => file.type.startsWith("video/"));
+
+      if (videoFiles.length === 0) {
+        throw new Error("No valid video files selected.");
+      }
+
+      const mockLessons = videoFiles.map((file, idx) => ({
+        id: newId + 1 + idx, type: "video", title: `${idx + 1}. ${file.name}`, dur: "Local Video", vid: URL.createObjectURL(file), done: false, tags: ["Local", "Video"], references: []
+      }));
+
+      const newProg = { id: newId, title: "Local Video Playlist", instructor: "Local Files", color: B.indigo, tags: ["Local"], status: "active", level: "All Levels", duration: "Custom", desc: `Playlist of ${videoFiles.length} local video(s)`, lessons: mockLessons, done: 0, total: mockLessons.length, isCustom: true };
+      setProgramsList(prev => [newProg, ...prev.filter(p => p.id !== newId)]);
+      setProgId(newId); setCurIdx(0); ytPlayerRef.current = null;
+      setPlStatus(`✓ Loaded ${videoFiles.length} local video(s)`);
+    } catch (err) {
+      setPlStatus(`✗ Error: ${err.message}`);
+    } finally {
+      setPlLoading(false); setTimeout(() => setPlStatus(""), 4000); if (e.target) e.target.value = null;
     }
   }
 
@@ -479,7 +509,7 @@ function Discite({ user }) {
 
     // Remove from My Programs list
     
-    setProgramsList(prev => prev.filter(p => String(p.id) !== targetId));
+    setProgramsList(prev => prev.filter(p => String(p.id) !== targetId)); // This now persists the deletion
     
     // If user is creator, also delete it from Marketplace
     if (isCreator) {
@@ -530,7 +560,7 @@ function Discite({ user }) {
   async function handleSaveProgram(progData) {
     const targetId = String(progData.id);
     if (editingProg) {
-        setProgramsList(prev => prev.map(p => String(p.id) === targetId ? progData : p));
+        setProgramsList(prev => prev.map(p => String(p.id) === targetId ? progData : p)); // This now persists the edit
         
        
         const mktItem = mktItems.find(m => String(m.progId) === targetId);
@@ -539,7 +569,7 @@ function Discite({ user }) {
         }
         setEditingProg(null);
     } else {
-        setProgramsList(prev => [progData, ...prev]);
+        setProgramsList(prev => [progData, ...prev.filter(p => p.id !== progData.id)]); // This now persists the creation
         const newMktId = Date.now() + 100;
         try {
           await setDoc(doc(db, "marketplace", String(newMktId)), {
@@ -734,8 +764,8 @@ function Discite({ user }) {
           <Route path="/" element={<Navigate to="/learn" replace />} />
           <Route path="/learn" element={
             <Learn
-              T={T} B={B}
-              plUrl={plUrl} setPlUrl={setPlUrl} loadPlaylist={loadPlaylist} plLoading={plLoading} plStatus={plStatus}
+              T={T} B={B} 
+              plUrl={plUrl} setPlUrl={setPlUrl} loadPlaylist={loadPlaylist} plLoading={plLoading} plStatus={plStatus} loadLocalFiles={loadLocalFiles}
               prog={prog} lessons={lessons} curIdx={curIdx} cur={cur} prevProg={prevProg} progId={progId} setPreviewId={setPreviewId}
               selLesson={selLesson} enterProg={enterProg} deleteProgram={deleteProgram} setEditingProg={setEditingProg} setShowCreateProgram={setShowCreateProgram}
               ytPlayerRef={ytPlayerRef} captureVideoNote={captureVideoNote} captureNewsNote={captureNewsNote} annotateVideo={annotateVideo} annotating={annotating}
