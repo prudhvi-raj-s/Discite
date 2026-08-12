@@ -9,6 +9,8 @@ export function Learn({
   T, B,
   plUrl, setPlUrl, loadPlaylist, plLoading, plStatus, loadLocalFiles,
   prog, lessons, curIdx, cur, prevProg, progId, setPreviewId,
+  plUrl, setPlUrl, loadPlaylist, plLoading, plStatus, loadLocalFiles, 
+  prog, lessons, curIdx, cur, prevProg, progId, setPreviewId, setDrawer, setSocialUrl,
   selLesson, enterProg, deleteProgram, setEditingProg, setShowCreateProgram,
   ytPlayerRef, captureVideoNote, captureNewsNote, annotateVideo, annotating,
   autoScroll, setAutoScroll, scrollPct, lang, setLang, translate, translating, showTrans, setShowTrans, translation,
@@ -27,6 +29,7 @@ export function Learn({
   const handleLocalFolderClick = () => {
     localFolderInputRef.current.click();
   };
+
   return (
     <div style={{ flex:1,display:"flex",overflow:"hidden" }}>
       <aside style={{ width:300,background:T.sf,borderRight:`1px solid ${T.bd}`,display:"flex",flexDirection:"column",flexShrink:0,overflow:"hidden" }}>
@@ -208,6 +211,12 @@ export function Learn({
           <div style={{ display:"flex",borderBottom:`1px solid ${T.bd}`,flexShrink:0,background:T.card }}>
             <button onClick={() => setSocTab("twitter")} style={{ flex:1, padding:"8px 0", fontSize:11, fontWeight:600, color:socTab==="twitter"?B.tw:T.txM, borderBottom:socTab==="twitter"?`2px solid ${B.tw}`:"2px solid transparent", background:"none", cursor:"pointer", transition:"all 0.15s" }}>𝕏 / Twitter Feed</button>
             <button onClick={() => setSocTab("linkedin")} style={{ flex:1, padding:"8px 0", fontSize:11, fontWeight:600, color:socTab==="linkedin"?"#0A66C2":T.txM, borderBottom:socTab==="linkedin"?`2px solid #0A66C2`:"2px solid transparent", background:"none", cursor:"pointer", transition:"all 0.15s" }}>LinkedIn</button>
+            <button onClick={() => { setSocialUrl({ platform: 'Twitter', url: 'https://twitter.com' }); setDrawer('social'); }} style={{ flex:1, padding:"8px 0", fontSize:11, fontWeight:600, color:B.tw, borderBottom:`2px solid transparent`, background:"none", cursor:"pointer", transition:"all 0.15s" }}>
+              𝕏 / Twitter
+            </button>
+            <button onClick={() => { setSocialUrl({ platform: 'LinkedIn', url: 'https://linkedin.com' }); setDrawer('social'); }} style={{ flex:1, padding:"8px 0", fontSize:11, fontWeight:600, color:"#0A66C2", borderBottom:`2px solid transparent`, background:"none", cursor:"pointer", transition:"all 0.15s" }}>
+              LinkedIn
+            </button>
           </div>
           {socTab === "twitter" ? (
             <>
@@ -224,6 +233,30 @@ export function Learn({
                   ))}
                 </div>
               </div>
+          <div style={{ padding:"6px 9px",borderBottom:`1px solid ${T.bd}`,flexShrink:0 }}>
+            <div style={{ display:"flex",gap:5 }}>
+              <input className="dc-inp" value={socSearch} onChange={e=>setSocSearch(e.target.value)} onKeyDown={e=>e.key==="Enter"&&aiSocSearch()} placeholder="Search X/Twitter or ↵ for results…" style={{ flex:1,padding:"5px 8px",fontSize:10.5,background:T.inp,border:`1px solid ${T.bd}`,color:T.tx }}/>
+              {socSearch&&<button className="dc-pri" onClick={()=>aiSocSearch()} style={{ background:B.green,color:"#fff",padding:"5px 8px",borderRadius:6,fontSize:11,fontWeight:700,flexShrink:0 }}>↵</button>}
+            </div>
+            <div style={{ display:"flex",flexWrap:"wrap",gap:3,marginTop:4 }}>
+              {cur.tags?.map(tg=>(
+                <div key={tg} onClick={()=>{setSocSearch(tg); aiSocSearch(tg);}} style={{cursor:"pointer", transition:"opacity 0.2s"}}>
+                   <Pill label={tg} color={B.green}/>
+                 </div>
+               ))}
+             </div>
+           </div>
+           <div style={{ flex:1,overflowY:"auto",padding:8 }}>
+             {loadSoc?[1,2].map(i=><SkelBox key={i} T={T}/>):filtSoc.length===0?<div style={{ textAlign:"center",color:T.txM,fontSize:12,paddingTop:24 }}>No posts found</div>
+             :filtSoc.map((p,i)=>(
+               <div key={i} style={{ background:T.card,border:`1px solid ${T.bd}`,borderRadius:9,padding:"9px 11px",marginBottom:7,animation:"dc-up 0.28s ease" }}>
+                 <div style={{ display:"flex",gap:7,marginBottom:6 }}>
+                   <Av init={(p.name||"U").split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase()} color={[B.green,B.indigo,B.rasp][i%3]} size={29}/>
+                   <div><div style={{ fontSize:11.5,fontWeight:500,color:T.tx }}>{p.name||"X User"}</div><div style={{ fontSize:9.5,color:B.tw }}>{p.handle} · {p.time}</div></div>
+                 </div>
+                 <div style={{ fontSize:11.5,color:T.txD,lineHeight:1.65,marginBottom:5 }}>{p.content}</div>
+                 <div style={{ fontSize:9.5,color:T.txM,fontFamily:"monospace" }}>♥ {(p.likes||0).toLocaleString()} · 🔁 {(p.retweets||0).toLocaleString()}</div>
+               </div>
               <div style={{ flex:1,overflowY:"auto",padding:8 }}>
                 {loadSoc?[1,2].map(i=><SkelBox key={i} T={T}/>):filtSoc.length===0?<div style={{ textAlign:"center",color:T.txM,fontSize:12,paddingTop:24 }}>No posts found</div>
                 :filtSoc.map((p,i)=>(
@@ -244,6 +277,8 @@ export function Learn({
                <div style={{textAlign:"center", fontSize:11, color:T.txM, padding:"10px 0"}}>Sign in to LinkedIn to view full feed and interact.</div>
             </div>
           )}
+            ))}
+          </div>
         </>}
         {rightTab==="news"&&<>
           <div style={{ padding:"6px 9px",borderBottom:`1px solid ${T.bd}`,flexShrink:0 }}>
